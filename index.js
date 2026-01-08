@@ -15,7 +15,8 @@ const CONFIG = {
   X_API_SECRET: process.env.X_API_SECRET,
   X_ACCESS_TOKEN: process.env.X_ACCESS_TOKEN,
   X_ACCESS_SECRET: process.env.X_ACCESS_SECRET,
-  PORT: process.env.PORT || 3000
+  PORT: process.env.PORT || 3000,
+  TIMEZONE: 'Asia/Kolkata' // IST timezone
 };
 
 // ============================================
@@ -76,6 +77,11 @@ const INSULT_MESSAGES = [
 ];
 
 // ============================================
+
+// Helper function to get current time in IST
+function getISTTime() {
+  return new Date().toLocaleString('en-US', { timeZone: CONFIG.TIMEZONE });
+}
 
 // Validate required environment variables
 function validateConfig() {
@@ -280,7 +286,7 @@ async function postToX(message) {
 // Main daily task
 async function dailyTask() {
   console.log('🔄 Running daily Codeforces check...');
-  console.log(`Time: ${new Date().toISOString()}`);
+  console.log(`Time (IST): ${getISTTime()}`);
   
   try {
     const submissions = await fetchRecentSubmissions(CONFIG.CF_HANDLE);
@@ -299,10 +305,14 @@ async function dailyTask() {
   }
 }
 
-// Schedule daily task at midnight
-cron.schedule('0 0 * * *', () => {
-  console.log('⏰ Midnight reached! Running scheduled task...');
+// Schedule daily task at midnight IST
+// Cron format: minute hour day month weekday
+// For IST (UTC+5:30), midnight IST = 18:30 UTC (previous day)
+cron.schedule('30 18 * * *', () => {
+  console.log('⏰ Midnight IST reached! Running scheduled task...');
   dailyTask();
+}, {
+  timezone: "Asia/Kolkata"
 });
 
 // Manual trigger endpoint
@@ -320,7 +330,9 @@ app.get('/health', (req, res) => {
   res.json({ 
     status: 'running', 
     time: new Date().toISOString(),
-    cfHandle: CONFIG.CF_HANDLE 
+    timeIST: getISTTime(),
+    cfHandle: CONFIG.CF_HANDLE,
+    timezone: CONFIG.TIMEZONE
   });
 });
 
@@ -331,7 +343,9 @@ app.listen(CONFIG.PORT, () => {
   console.log('🚀 Codeforces Tracker Bot Started!');
   console.log(`📡 Server running on port ${CONFIG.PORT}`);
   console.log(`👤 Tracking handle: ${CONFIG.CF_HANDLE}`);
-  console.log(`📅 Scheduled to post daily at midnight (00:00)`);
+  console.log(`🌏 Timezone: ${CONFIG.TIMEZONE}`);
+  console.log(`📅 Scheduled to post daily at midnight IST (00:00 IST)`);
+  console.log(`🕐 Current IST time: ${getISTTime()}`);
   console.log(`🔧 Manual trigger: POST http://localhost:${CONFIG.PORT}/trigger`);
   console.log(`💚 Health check: GET http://localhost:${CONFIG.PORT}/health\n`);
 });
