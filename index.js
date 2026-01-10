@@ -192,7 +192,7 @@ function generateMessage(problems) {
   }
   header += '\n\n';
   
-  const footer = '\n#Codeforces #CP #100DaysOfCode';
+  const footer = '\n#Codeforces #CP #Consistency';
   
   // Calculate available space for problems list
   const headerFooterLength = header.length + footer.length;
