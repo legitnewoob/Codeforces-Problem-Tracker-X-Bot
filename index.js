@@ -287,6 +287,7 @@ async function postToX(message) {
 async function dailyTask() {
   console.log('🔄 Running daily Codeforces check...');
   console.log(`Time (IST): ${getISTTime()}`);
+  console.log(`Time (UTC): ${new Date().toISOString()}`);
   
   try {
     const submissions = await fetchRecentSubmissions(CONFIG.CF_HANDLE);
@@ -305,15 +306,16 @@ async function dailyTask() {
   }
 }
 
-// Schedule daily task at midnight IST
-// Cron format: minute hour day month weekday
-// For IST (UTC+5:30), midnight IST = 18:30 UTC (previous day)
-cron.schedule('30 18 * * *', () => {
+// Schedule daily task at midnight IST (00:00 IST)
+// Using direct IST time: 0 0 * * * means midnight in Asia/Kolkata timezone
+cron.schedule('0 0 * * *', () => {
   console.log('⏰ Midnight IST reached! Running scheduled task...');
   dailyTask();
 }, {
   timezone: "Asia/Kolkata"
 });
+
+console.log('📅 Cron job scheduled for: 00:00 IST (midnight)');
 
 // Manual trigger endpoint
 app.post('/trigger', async (req, res) => {
@@ -346,6 +348,7 @@ app.listen(CONFIG.PORT, () => {
   console.log(`🌏 Timezone: ${CONFIG.TIMEZONE}`);
   console.log(`📅 Scheduled to post daily at midnight IST (00:00 IST)`);
   console.log(`🕐 Current IST time: ${getISTTime()}`);
+  console.log(`🕐 Current UTC time: ${new Date().toISOString()}`);
   console.log(`🔧 Manual trigger: POST http://localhost:${CONFIG.PORT}/trigger`);
   console.log(`💚 Health check: GET http://localhost:${CONFIG.PORT}/health\n`);
 });
